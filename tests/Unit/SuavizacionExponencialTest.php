@@ -48,4 +48,12 @@ final class SuavizacionExponencialTest extends TestCase
 
         (new CalculadoraPronosticos())->suavizacionExponencial(self::SERIE, 1.5);
     }
+
+    public function testRechazaSeriesVacias(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('al menos un periodo');
+
+        (new CalculadoraPronosticos())->suavizacionExponencial([], 0.3);
+    }
 }
