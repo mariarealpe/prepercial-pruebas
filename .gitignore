@@ -8,3 +8,6 @@ coverage.xml
 
 # Archivos del sistema operativo
 .DS_Store
+
+# Configuración del editor (PhpStorm)
+.idea/
