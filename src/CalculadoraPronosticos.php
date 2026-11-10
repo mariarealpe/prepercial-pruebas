@@ -37,16 +37,31 @@ final class CalculadoraPronosticos
     }
 
     /**
+     * Pronostica el siguiente periodo con suavización exponencial simple.
+     *
+     * Fórmula: F(t+1) = F(t) + α · (D(t) − F(t)), empezando con F(2) = D(1).
+     * Cada pronóstico corrige el anterior en una fracción α del error cometido:
+     * con α = 0 el pronóstico nunca cambia y con α = 1 es la última demanda.
+     *
      * @param list<int|float> $serie
      */
     public function suavizacionExponencial(array $serie, float $alfa): float
     {
-        $f = (float) $serie[0];
-        foreach ($serie as $d) {
-            $f = $f + $alfa * ($d - $f);
+        if ($alfa < 0 || $alfa > 1) {
+            throw new InvalidArgumentException('Alfa debe estar entre 0 y 1');
+        }
+        if ($serie === []) {
+            throw new InvalidArgumentException('Se necesita al menos un periodo');
         }
 
-        return $f;
+        // F(2) = D(1). Al aplicar la fórmula sobre D(1) el pronóstico no cambia,
+        // así que se puede recorrer la serie completa desde el primer periodo.
+        $pronostico = (float) $serie[0];
+        foreach ($serie as $demandaReal) {
+            $pronostico += $alfa * ($demandaReal - $pronostico);
+        }
+
+        return $pronostico;
     }
 
     /**
