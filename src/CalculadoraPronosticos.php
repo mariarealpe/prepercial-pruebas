@@ -37,6 +37,19 @@ final class CalculadoraPronosticos
     }
 
     /**
+     * @param list<int|float> $serie
+     */
+    public function suavizacionExponencial(array $serie, float $alfa): float
+    {
+        $f = (float) $serie[0];
+        foreach ($serie as $d) {
+            $f = $f + $alfa * ($d - $f);
+        }
+
+        return $f;
+    }
+
+    /**
      * Error absoluto medio (MAD): promedio de las diferencias absolutas, en unidades.
      *
      * @param list<int|float> $real
