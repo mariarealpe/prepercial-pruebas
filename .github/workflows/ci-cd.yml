@@ -19,6 +19,29 @@ on:
 
 jobs:
   # ---------------------------------------------------------------------------
+  # CI: análisis estático
+  # ---------------------------------------------------------------------------
+  analisis-estatico:
+    name: Análisis estático
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v6
+
+      - name: Instalar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Instalar dependencias
+        run: composer install --no-interaction --no-progress
+
+      # Revisa tipos, métodos inexistentes y código inalcanzable sin ejecutar el código.
+      - name: Revisar el código con PHPStan
+        run: composer lint
+
+  # ---------------------------------------------------------------------------
   # CI: pruebas unitarias
   # ---------------------------------------------------------------------------
   pruebas-unitarias:
@@ -46,13 +69,62 @@ jobs:
         run: composer test:unit
 
   # ---------------------------------------------------------------------------
+  # CI: pruebas BDD (Behat)
+  # ---------------------------------------------------------------------------
+  pruebas-bdd:
+    name: Pruebas BDD
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v6
+
+      - name: Instalar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Instalar dependencias
+        run: composer install --no-interaction --no-progress
+
+      - name: Ejecutar escenarios BDD
+        run: composer test:bdd
+
+  # ---------------------------------------------------------------------------
+  # CI: cobertura de código
+  # ---------------------------------------------------------------------------
+  cobertura:
+    name: Cobertura
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v6
+
+      # coverage: pcov activa el driver de cobertura; sin él PHPUnit no puede medir nada.
+      - name: Instalar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: pcov
+
+      - name: Instalar dependencias
+        run: composer install --no-interaction --no-progress
+
+      - name: Medir la cobertura
+        run: composer test:cobertura
+
+      # PHPUnit no falla por cobertura baja; este script sí, si no se llega al 90 %.
+      - name: Verificar la cobertura mínima
+        run: php bin/verificar-cobertura.php coverage.xml 90
+
+  # ---------------------------------------------------------------------------
   # CD: despliegue simulado
   # ---------------------------------------------------------------------------
   despliegue:
     name: Despliegue (simulado)
     # needs: el despliegue solo corre si todos los jobs listados terminaron bien.
     # Si una prueba falla, este job no se ejecuta y nada llega a producción.
-    needs: [pruebas-unitarias]
+    needs: [analisis-estatico, pruebas-unitarias, pruebas-bdd, cobertura]
     # Solo se despliega lo que entra a main, nunca desde un pull request.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
