@@ -124,7 +124,7 @@ final class CalculadoraPronosticos
             throw new InvalidArgumentException('El umbral debe estar entre 0 y 100');
         }
 
-        return $errorPorcentual >= $umbral;
+        return $errorPorcentual > $umbral;
     }
 
     /**
